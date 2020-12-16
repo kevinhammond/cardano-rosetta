@@ -465,13 +465,37 @@ const generateRewardAddress = (logger: Logger, network: NetworkIdentifier, payme
   return bech32address;
 };
 
+const processStakeOperationCredential = (
+  logger: Logger,
+  network: NetworkIdentifier,
+  stakingCredential?: Components.Schemas.PublicKey,
+  accountIdentifier?: Components.Schemas.AccountIdentifier
+): { credential: StakeCredential; address: string } => {
+  if (!stakingCredential) throw ErrorFactory.missingStakingKeyError();
+  const credential = getStakingCredentialFromHex(logger, stakingCredential);
+  const address = generateRewardAddress(logger, network, credential);
+  if (address !== accountIdentifier?.address)
+    // eslint-disable-next-line quotes
+    throw ErrorFactory.invalidAddressError("Staking address doesn't match the credential");
+  return { credential, address };
+};
+
 const processStakeKeyRegistration = (
   logger: Logger,
+  network: NetworkIdentifier,
   operation: Components.Schemas.Operation
-): CardanoWasm.Certificate => {
+): { certificate: CardanoWasm.Certificate; address: string } => {
   logger.info('[processStakeKeyRegistration] About to process stake key registration');
-  const credential = getStakingCredentialFromHex(logger, operation.metadata?.staking_credential);
-  return CardanoWasm.Certificate.new_stake_registration(StakeRegistration.new(credential));
+  const { credential, address } = processStakeOperationCredential(
+    logger,
+    network,
+    operation.metadata?.staking_credential,
+    operation.account
+  );
+  return {
+    certificate: CardanoWasm.Certificate.new_stake_registration(StakeRegistration.new(credential)),
+    address
+  };
 };
 
 const processStakeKeyDeRegistration = (
@@ -480,8 +504,12 @@ const processStakeKeyDeRegistration = (
   operation: Components.Schemas.Operation
 ): { certificate: CardanoWasm.Certificate; address: string } => {
   logger.info('[processStakeKeyDeRegistration] About to process stake key deregistration');
-  const credential = getStakingCredentialFromHex(logger, operation.metadata?.staking_credential);
-  const address = generateRewardAddress(logger, network, credential);
+  const { credential, address } = processStakeOperationCredential(
+    logger,
+    network,
+    operation.metadata?.staking_credential,
+    operation.account
+  );
   return {
     certificate: CardanoWasm.Certificate.new_stake_deregistration(StakeDeregistration.new(credential)),
     address
@@ -494,8 +522,12 @@ const processStakeDelegation = (
   operation: Components.Schemas.Operation
 ): { certificate: CardanoWasm.Certificate; address: string } => {
   logger.info('[processStakeDelegation] About to process stake key delegation');
-  const credential = getStakingCredentialFromHex(logger, operation.metadata?.staking_credential);
-  const address = generateRewardAddress(logger, network, credential);
+  const { credential, address } = processStakeOperationCredential(
+    logger,
+    network,
+    operation.metadata?.staking_credential,
+    operation.account
+  );
   const poolKeyHash = operation.metadata?.pool_key_hash;
   if (!poolKeyHash) {
     logger.error('[processStakeDelegation] no pool key hash provided for stake delegation');
@@ -513,8 +545,12 @@ const processWithdrawal = (
   operation: Components.Schemas.Operation
 ): { reward: CardanoWasm.RewardAddress; address: string } => {
   logger.info('[processWithdrawal] About to process withdrawal');
-  const credential = getStakingCredentialFromHex(logger, operation.metadata?.staking_credential);
-  const address = generateRewardAddress(logger, network, credential);
+  const { credential, address } = processStakeOperationCredential(
+    logger,
+    network,
+    operation.metadata?.staking_credential,
+    operation.account
+  );
   return { reward: CardanoWasm.RewardAddress.new(network, credential), address };
 };
 
@@ -548,7 +584,8 @@ const processOperations = (
         break;
       }
       case operationType.STAKE_KEY_REGISTRATION: {
-        certificates.add(processStakeKeyRegistration(logger, operation));
+        const { certificate } = processStakeKeyRegistration(logger, network, operation);
+        certificates.add(certificate);
         stakeKeyRegistrationsCount++;
         break;
       }
