@@ -18,7 +18,7 @@ const DEFAULT_PAGE_SIZE = 5;
  * Setups a database connection that will fail if invoked.
  * This is useful to test offline methods
  */
-export const setupOfflineDatabase = () => {
+export const setupOfflineDatabase = (): Pool => {
   const poolMock = new Pool();
   poolMock.query = jest.fn();
   return poolMock;
@@ -104,6 +104,7 @@ export const testInvalidNetworkParameters = (
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const modifyMAOperation = (policyId?: string, symbol?: string) =>
   mod(
     1,

@@ -171,12 +171,15 @@ const operationProcessor: (
 } = (logger, operation, network, resultAccumulator) => ({
   [OperationType.INPUT]: () => {
     resultAccumulator.transactionInputs.add(validateAndParseTransactionInput(logger, operation));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     resultAccumulator.addresses.push(operation.account!.address);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     resultAccumulator.inputAmounts.push(operation.amount!.value);
     return resultAccumulator;
   },
   [OperationType.OUTPUT]: () => {
     resultAccumulator.transactionOutputs.add(validateAndParseTransactionOutput(logger, operation));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     resultAccumulator.outputAmounts.push(operation.amount!.value);
     return resultAccumulator;
   },

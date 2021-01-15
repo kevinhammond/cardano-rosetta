@@ -157,6 +157,7 @@ describe(CONSTRUCTION_PAYLOADS_ENDPOINT, () => {
   test('Should return an error when input operation has no coin change property', async () => {
     const { operations, ...restPayload } = CONSTRUCTION_PAYLOADS_REQUEST;
     const payload = {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       operations: operations.map(({ coin_change, ...restOperation }) => ({
         ...restOperation
       })),
@@ -177,6 +178,7 @@ describe(CONSTRUCTION_PAYLOADS_ENDPOINT, () => {
   test('Should return an error when input operation has invalid coin identifier', async () => {
     const { operations, ...restPayload } = CONSTRUCTION_PAYLOADS_REQUEST;
     const payload = {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       operations: operations.map(({ coin_change, ...restOperation }) => ({
         coin_change: {
           coin_identifier: {
@@ -510,7 +512,7 @@ describe(CONSTRUCTION_PAYLOADS_ENDPOINT, () => {
       network_identifier,
       operations: operations.map(({ metadata: opMetadata, ...rest }) => ({
         metadata: opMetadata && {
-          staking_credential: { hex_bytes: opMetadata.staking_credential!.hex_bytes, curve_type: 'secp256k1' }
+          staking_credential: { hex_bytes: opMetadata.staking_credential?.hex_bytes, curve_type: 'secp256k1' }
         },
         ...rest
       })),

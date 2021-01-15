@@ -28,7 +28,6 @@ import {
   SIGNED_TX_WITH_STAKE_KEY_REGISTRATION_AND_WITHDRWAWAL,
   CONSTRUCTION_PAYLOADS_REQUEST_WITH_MA,
   SIGNED_TX_WITH_MA,
-  CONSTRUCTION_COMBINE_PAYLOAD,
   CONSTRUCTION_PAYLOADS_REQUEST_WITH_MULTIPLE_MA,
   SIGNED_TX_WITH_MULTIPLE_MA
 } from '../fixture-data';
@@ -371,8 +370,6 @@ describe(CONSTRUCTION_PREPROCESS_ENDPOINT, () => {
     });
 
     test('Should fail if MultiAsset symbol longer than expected', async () => {
-      const invalidSymbol = new Array(ASSET_NAME_LENGTH + 2).join('0');
-
       const operations = mod(
         1,
         'metadata',
@@ -414,6 +411,7 @@ describe(CONSTRUCTION_PREPROCESS_ENDPOINT, () => {
         code: 4009,
         details: {
           message:
+            // eslint-disable-next-line max-len
             'Token name 6e7574636f696e has already been added for policy b0d07d45fe9514f80213f4020e5a61241458be626841cde717cb38a7 and will be overriden'
         },
         message: invalidOperationErrorMessage,
