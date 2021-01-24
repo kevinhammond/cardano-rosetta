@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import fs from 'fs';
-import { mod } from 'shades';
+import { mod, findBy } from 'shades';
 import path from 'path';
 import StatusCodes from 'http-status-codes';
 import PgConnectionString from 'pg-connection-string';
@@ -115,3 +115,14 @@ export const modifyMAOperation = (policyId?: string, symbol?: string) =>
     policyId: policyId ?? tokenBundleItem.policyId,
     tokens: mod(0, 'currency', 'symbol')((v: string) => symbol || v)(tokenBundleItem.tokens)
   }));
+
+export const modifyPoolKeyHash = (
+  payload: Components.Schemas.ConstructionPayloadsRequest,
+  poolKeyHash?: string
+): Components.Schemas.ConstructionPayloadsRequest =>
+  mod(
+    'operations',
+    findBy((operation: Components.Schemas.Operation) => operation && operation.type === 'stakeDelegation'),
+    'metadata',
+    'pool_key_hash'
+  )(() => poolKeyHash)(payload);
