@@ -17,28 +17,21 @@ import { isPolicyIdValid, isTokenNameValid } from '../validations';
 import { generateRewardAddress } from './addresses';
 import { getStakingCredentialFromHex } from './staking-credentials';
 
-/**
- * This function validates and parses token bundles that might be attached to unspents
- *
- * @param tokenBundle bundle to be parsed
- */
 const validateAndParseTokenBundle = (tokenBundle: Components.Schemas.TokenBundleItem[]): CardanoWasm.MultiAsset =>
-  tokenBundle.reduce((multiAssets, multiAsset) => {
-    const polictyId = multiAsset.policyId;
-    if (!isPolicyIdValid(polictyId))
-      throw ErrorFactory.transactionOutputsParametersMissingError(`PolicyId ${polictyId} is not valid`);
-    const policy = ScriptHash.from_bytes(Buffer.from(multiAsset.policyId, 'hex'));
-    const assetsToAdd = multiAsset.tokens.reduce((assets, asset) => {
-      const tokenName = asset.currency.symbol;
-      if (!isTokenNameValid(asset.currency.symbol))
+  tokenBundle.reduce((multiAssets, { policyId, tokens }) => {
+    if (!isPolicyIdValid(policyId))
+      throw ErrorFactory.transactionOutputsParametersMissingError(`PolicyId ${policyId} is not valid`);
+    const policy = ScriptHash.from_bytes(Buffer.from(policyId, 'hex'));
+    const assetsToAdd = tokens.reduce((assets, { currency: { symbol: tokenName }, value: assetValue }) => {
+      if (!isTokenNameValid(tokenName))
         throw ErrorFactory.transactionOutputsParametersMissingError(`Token name ${tokenName} is not valid`);
       const assetName = AssetName.new(Buffer.from(tokenName, 'hex'));
       if (assets.get(assetName) !== undefined) {
         throw ErrorFactory.transactionOutputsParametersMissingError(
-          `Token name ${tokenName} has already been added for policy ${multiAsset.policyId} and will be overriden`
+          `Token name ${tokenName} has already been added for policy ${policyId} and will be overriden`
         );
       }
-      assets.insert(assetName, BigNum.from_str(asset.value));
+      assets.insert(assetName, BigNum.from_str(assetValue));
       return assets;
     }, Assets.new());
     multiAssets.insert(policy, assetsToAdd);
