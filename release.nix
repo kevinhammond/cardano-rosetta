@@ -7,7 +7,7 @@
 #
 ############################################################################
 {
-  cardano-rosetta-server ? { rev = null; }
+  cardano-rosetta ? { rev = null; }
 }:
 
 let
